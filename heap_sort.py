@@ -2,7 +2,7 @@
 def sift(li, head, right):
     i = head
     j = 2*i + 1
-    tmp = li[head]
+    # tmp = li[head]
     while j <= right:
         if j + 1 <= right and li[j + 1] > li[j]:
             j = j + 1
