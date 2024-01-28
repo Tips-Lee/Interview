@@ -18,49 +18,40 @@ from tensorflow.keras.losses import CategoricalCrossentropy, SparseCategoricalCr
 from tensorflow.keras.activations import sigmoid
 from tensorflow.keras.metrics import AUC
 from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping, TensorBoard
-from tensorflow.keras.datasets import mnist
-from tensorflow.data import TFRecordDataset
+from read_data import get_mnist_ds
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 model_dir = "./models/tf_build"
 
-(x_train, y_train), (x_test, y_test) = mnist.load_data(path=r"C:\Users\Tips\Desktop\aigc\Interview/data/mnist.npz")
-train_ds = tf.data.Dataset.from_tensor_slices((x_train, y_train)).map(
-    lambda x, y: (tf.cast(x, tf.float32) / 255.0 - 0.5, tf.cast(y, tf.float32)))
-test_ds = tf.data.Dataset.from_tensor_slices((x_test, y_test)).map(
-    lambda x, y: (tf.cast(x, tf.float32) / 255.0 - 0.5, tf.cast(y, tf.float32)))
-
-train_ds = train_ds.shuffle(1024).batch(1000).prefetch(32)
-test_ds = test_ds.shuffle(1024).batch(1000).prefetch(32)
+train_ds, test_ds = get_mnist_ds()
 
 
 class DeepFM(Model):
     def __init__(self, ):
         super(DeepFM, self).__init__()
         self.flatten = layers.Flatten()
-        self.fc1 = Dense(10, activation=None, kernel_initializer=GlorotNormal(), bias_initializer=Zeros(),
+        self.fc1 = Dense(10, activation="softmax", kernel_initializer=GlorotNormal(), bias_initializer=Zeros(),
                          kernel_regularizer=l2(0.01))
 
     def build(self, input_shape):
-        self.w = self.add_weight(name="w", shape=(input_shape[-1] * input_shape[-2], 64),
+        self.w = self.add_weight(name="w", shape=(input_shape['img'][-1] * input_shape['img'][-2], 64),
                                  initializer=GlorotNormal(seed=0),
                                  trainable=True)
         self.b = self.add_weight(name='b', shape=(64,), initializer=Zeros(), trainable=True)
         super(DeepFM, self).build(input_shape)
 
-
     def call(self, inputs, training=False):
-        x = self.flatten(inputs)
+        x = self.flatten(inputs['img'])
         x = tf.matmul(x, self.w) + self.b
         logits = self.fc1(x)
-        return logits
+        return {"label": logits}
 
 
 model = DeepFM()
 model.compile(optimizer=SGD(learning_rate=0.001, momentum=0),
-              loss=SparseCategoricalCrossentropy(from_logits=True),
-              metrics=['acc'], )
+              loss=SparseCategoricalCrossentropy(from_logits=False),
+              metrics={"label": ['acc']}, )
 
 ckpt_callback = ModelCheckpoint(filepath="./ckpt/tf_build/model.ckpt-{epoch:02d}",
                                 monitor='val_acc',
