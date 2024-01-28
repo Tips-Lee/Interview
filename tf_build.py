@@ -47,6 +47,8 @@ class DeepFM(Model):
                                  initializer=GlorotNormal(seed=0),
                                  trainable=True)
         self.b = self.add_weight(name='b', shape=(64,), initializer=Zeros(), trainable=True)
+        super(DeepFM, self).build(input_shape)
+
 
     def call(self, inputs, training=False):
         x = self.flatten(inputs)

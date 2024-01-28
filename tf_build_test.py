@@ -47,21 +47,28 @@ model = load_model(model_dir, compile=True)
 #
 # pred = model.predict(x=test_ds, steps=1)
 # print(pred[0])
-pred = model(tf.constant(sample))
-print(pred)
+# pred = model(tf.constant(sample))
+# print(pred)
+f = model.signatures["serving_default"]
+result = f(input_1=sample)  # 模型预测
+print(result)
+result = f(input_1=tf.constant(sample))  # 模型预测
+print(result)
+result = f(input_1=sample.tolist())  # 模型预测
+print(result)
 
-# del model
-# model = tf.saved_model.load("./models/tf_build1")
+
+del model
+model = tf.saved_model.load("./models/tf_build1")
 # print(model)
 
 # f = model.signatures["serving_default"]
-# result = f(input_1=sample)  # 模型预测
-# print(result)
-# # result = f(input_1=tf.constant(sample))  # 模型预测
-# # print(result)
-# #
-# # result = f(input_1=sample.tolist())  # 模型预测
-# # print(result)
+result = f(input_1=sample)  # 模型预测
+print(result)
+result = f(input_1=tf.constant(sample))  # 模型预测
+print(result)
+result = f(input_1=sample.tolist())  # 模型预测
+print(result)
 # result = model(inputs=sample)  # 模型预测
 # print(result)
 # result = model(sample)  # 模型预测
