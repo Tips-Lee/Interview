@@ -15,9 +15,11 @@ inputs = {}
 outputs ={}
 inputs["img"] = Input(shape=(28, 28), name="img")
 x = layers.Flatten()(inputs["img"])
-x = layers.Dense(64, activation="relu")(x)
-outputs["label"] = layers.Dense(10, activation=None, kernel_initializer="lecun_normal")(x)
+feature = layers.Dense(64, activation="relu")(x)
+outputs["label"] = layers.Dense(10, activation=None, kernel_initializer="lecun_normal")(feature)
 model = Model(inputs=inputs, outputs=outputs)
+backbone = Model(inputs, feature)
+activations = Model(feature, outputs)
 
 model.compile(optimizer=Adam(learning_rate=0.001,),
               loss="sparse_categorical_crossentropy",
@@ -26,8 +28,15 @@ model.compile(optimizer=Adam(learning_rate=0.001,),
 train_ds, valid_ds = get_mnist_ds(batch_size=4)
 
 model.fit(x=train_ds,
-          epochs=30,
+          epochs=1,
           validation_data=valid_ds,
           validation_steps=10,
           validation_freq=1)
+valid_sample = next(iter(valid_ds))[0]
+print(model.predict(x=valid_sample)['label'][:2])
+backbone_ = backbone.predict(x=valid_sample)
+activations_ = activations.predict(x=backbone_)
+print(activations_['label'][:2])
+print(activations_['label'].shape)
+
 
