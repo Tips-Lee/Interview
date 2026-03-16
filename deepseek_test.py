@@ -4,6 +4,8 @@
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
+import requests
+import json
 
 load_dotenv()
 
@@ -108,8 +110,32 @@ def chat_with_thinking_using_chat_model():
     print("\n=== 最终答案 ===")
     print(final)
 
+def chat_with_request():
+    response = requests.post(
+        "https://api.deepseek.com/chat/completions",
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {os.environ.get('DEEPSEEK_API_KEY')}"
+        },
+        json={
+            "model": "deepseek-reasoner",
+            "messages": [
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": "Hello!"}
+            ],
+            "stream": False
+        }
+    )
+    print(response)
+    print(response.json())
+    print(json.loads(response.text)['choices'][0]['message']['reasoning_content'])
+    print(json.loads(response.text)['choices'][0]['message']['content'])
+
 if __name__ == "__main__":
     # chat_with_deepseek_chat()
     # chat_with_deepseek_reasoner()
     # multi_turn_with_reasoner()
-    chat_with_thinking_using_chat_model()
+    # chat_with_thinking_using_chat_model()
+    chat_with_request()
+
+
