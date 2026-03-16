@@ -22,6 +22,7 @@ data/
 .ruff_cache/
 .coverage
 .coverage.*
+.env
 htmlcov/
 
 # IDE/editor settings
