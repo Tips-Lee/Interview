@@ -48,6 +48,68 @@ def chat_with_deepseek_reasoner():
     print("\n=== 最终答案 ===")
     print(final_content)
 
+
+def multi_turn_with_reasoner():
+    messages = [
+        {"role": "user", "content": "解释一下什么是量子纠缠"}
+    ]
+    
+    # 第一轮调用
+    response = client.chat.completions.create(
+        model="deepseek-reasoner",
+        messages=messages,
+        stream=False
+    )
+    
+    # 记录本轮回复
+    reasoning = response.choices[0].message.reasoning_content
+    answer = response.choices[0].message.content
+    
+    # 打印推理过程和最终答案
+    print("【第一轮推理】\n", reasoning)
+    print("【第一轮答案】\n", answer)
+    
+    # 准备下一轮对话：将上一轮的最终答案作为助手消息加入历史
+    # 注意：不要加入 reasoning_content
+    messages.append({"role": "assistant", "content": answer})
+    
+    # 加入新的用户问题
+    messages.append({"role": "user", "content": "那它在量子计算中有什么应用？"})
+    
+    # 第二轮调用
+    response2 = client.chat.completions.create(
+        model="deepseek-reasoner",
+        messages=messages,
+        stream=False
+    )
+    
+    # 打印第二轮结果
+    print("\n【第二轮推理】\n", response2.choices[0].message.reasoning_content)
+    print("【第二轮答案】\n", response2.choices[0].message.content)
+
+def chat_with_thinking_using_chat_model():
+    response = client.chat.completions.create(
+        model="deepseek-chat",   # 使用 chat 模型
+        messages=[
+            {"role": "user", "content": "计算 23 * 17 的结果，并分步解释"}
+        ],
+        extra_body={
+            "thinking": {"type": "enabled"}   # 开启思考模式
+        },
+        stream=False
+    )
+    
+    # 此时响应中也会包含 reasoning_content 字段
+    reasoning = response.choices[0].message.reasoning_content
+    final = response.choices[0].message.content
+    
+    print("=== 推理过程 ===")
+    print(reasoning)
+    print("\n=== 最终答案 ===")
+    print(final)
+
 if __name__ == "__main__":
     # chat_with_deepseek_chat()
-    chat_with_deepseek_reasoner()
+    # chat_with_deepseek_reasoner()
+    # multi_turn_with_reasoner()
+    chat_with_thinking_using_chat_model()
